@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="An interactive drag-and-drop introduction to the Minimax algorithm.">
+  <title>Susan Zehra's Minimax Strategy Challenge</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-copy">
+      <p class="eyebrow">Interactive AI Decision Game</p>
+      <h1>Susan Zehra’s<br><span>Minimax Strategy Challenge</span></h1>
+      <p>Think ahead, assume a smart opponent, and choose the move with the best guaranteed outcome.</p>
+    </div>
+    <div class="hero-art" aria-hidden="true">
+      <div class="root-bubble">MAX</div>
+      <div class="branch one"></div><div class="branch two"></div>
+      <div class="mini-bubble left">MIN</div><div class="mini-bubble right">MIN</div>
+    </div>
+  </header>
+
+  <main>
+    <section id="welcome" class="card welcome-card">
+      <span class="kicker">Before you begin</span>
+      <h2>Enter your name</h2>
+      <p>Your name will appear on your completion certificate.</p>
+      <form id="nameForm">
+        <label for="studentName">Name</label>
+        <div class="name-row">
+          <input id="studentName" maxlength="70" autocomplete="name" placeholder="Enter your full name" required>
+          <button class="primary" type="submit">Start Challenge →</button>
+        </div>
+        <p id="nameError" class="error" role="alert"></p>
+      </form>
+      <p class="privacy"><strong>Privacy:</strong> Nothing is stored or transmitted. Your name is used only in this browser to personalize the completion certificate.</p>
+    </section>
+
+    <section id="game" hidden>
+      <div class="progress-card">
+        <div><span id="progressText">Question 1 of 3</span><strong id="playerGreeting"></strong></div>
+        <div class="progress-track"><div id="progressBar"></div></div>
+      </div>
+
+      <section id="question1" class="question">
+        <div class="scenario card">
+          <div><span class="kicker coral">Question 1 · Know the players</span><h2>Who chooses at each level?</h2>
+          <p>In Minimax, the players alternate turns. Drag the three labels to the correct levels of the game tree.</p></div>
+          <div class="formula"><b>MAX</b> wants ↑<br><b>MIN</b> wants ↓</div>
+        </div>
+
+        <div class="activity-grid">
+          <aside class="card lesson">
+            <h3>Quick concept review</h3>
+            <ul>
+              <li><b>MAX</b> chooses the largest available value.</li>
+              <li><b>MIN</b> represents a rational opponent and chooses the smallest value.</li>
+              <li><b>Terminal nodes</b> contain final utility scores.</li>
+              <li>Values are evaluated from the bottom upward.</li>
+            </ul>
+            <div class="tip">A larger utility is better for MAX. A smaller utility is better for MIN.</div>
+          </aside>
+          <div class="card workspace">
+            <div class="token-bank" data-bank="q1">
+              <button class="drag-token blue" draggable="true" data-value="MAX">MAX player</button>
+              <button class="drag-token orange" draggable="true" data-value="MIN">MIN player</button>
+              <button class="drag-token green" draggable="true" data-value="TERMINAL">Terminal utilities</button>
+            </div>
+            <div class="level-tree">
+              <div class="level"><span>Root level</span><div class="drop-slot" data-answer="MAX">Drop label</div></div>
+              <div class="connector">╱ &nbsp; ╲</div>
+              <div class="level middle"><span>Opponent’s level</span><div class="drop-slot" data-answer="MIN">Drop label</div></div>
+              <div class="connector">╱ ╲ &nbsp;&nbsp; ╱ ╲</div>
+              <div class="level"><span>End of search</span><div class="drop-slot" data-answer="TERMINAL">Drop label</div></div>
+            </div>
+            <div class="actions"><button class="secondary reset" data-question="1">Reset</button><button id="checkQ1" class="primary">Check Answer</button></div>
+            <p id="feedback1" class="feedback" role="status">Drag each label to a tree level. You can also click a label and then click a slot.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="question2" class="question" hidden>
+        <div class="scenario card">
+          <div><span class="kicker purple">Question 2 · Back up the values</span><h2>Evaluate a small game tree</h2>
+          <p>Work from the leaves upward. MIN evaluates each branch first; then MAX chooses between the backed-up results.</p></div>
+          <div class="formula">MIN first<br>then MAX</div>
+        </div>
+        <div class="activity-grid">
+          <aside class="card lesson">
+            <h3>What the tree means</h3>
+            <p>MAX chooses between <b>Plan A</b> and <b>Plan B</b>. MIN then selects the least favorable outcome for MAX.</p>
+            <ol>
+              <li>Find the minimum under Plan A.</li>
+              <li>Find the minimum under Plan B.</li>
+              <li>At the root, choose the maximum of those results.</li>
+            </ol>
+          </aside>
+          <div class="card workspace">
+            <div class="token-bank" data-bank="q2">
+              <button class="drag-token blue" draggable="true" data-value="ROOT4">Root MAX = 4</button>
+              <button class="drag-token orange" draggable="true" data-value="LEFT2">Plan A MIN = 2</button>
+              <button class="drag-token orange" draggable="true" data-value="RIGHT4">Plan B MIN = 4</button>
+            </div>
+            <div class="game-tree simple-tree">
+              <div class="tree-root"><b>MAX</b><div class="drop-slot compact" data-answer="ROOT4">Value?</div></div>
+              <svg viewBox="0 0 600 115" aria-hidden="true"><path d="M300 5 L155 105 M300 5 L445 105"/></svg>
+              <div class="tree-branches">
+                <div class="branch-group"><h4>Plan A · MIN</h4><div class="drop-slot compact" data-answer="LEFT2">Value?</div><div class="leaves"><span>6</span><span>2</span></div></div>
+                <div class="branch-group"><h4>Plan B · MIN</h4><div class="drop-slot compact" data-answer="RIGHT4">Value?</div><div class="leaves"><span>4</span><span>8</span></div></div>
+              </div>
+            </div>
+            <div class="actions"><button class="secondary reset" data-question="2">Reset</button><button id="checkQ2" class="primary">Check Answer</button></div>
+            <p id="feedback2" class="feedback" role="status">Place the two MIN results before placing the MAX result.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="question3" class="question" hidden>
+        <div class="scenario card">
+          <div><span class="kicker green-text">Question 3 · Security decision</span><h2>Defend a hospital network</h2>
+          <p>A hospital detects a cyber threat. The defender chooses a response, and a rational attacker chooses the most damaging counteraction. Higher utility means a safer outcome for the hospital.</p></div>
+          <div class="formula">Best guaranteed<br>security outcome</div>
+        </div>
+        <div class="activity-grid wide-lesson">
+          <aside class="card lesson">
+            <h3>Your mission</h3>
+            <ol>
+              <li>For each defense, assume the attacker chooses its <b>lowest</b> utility.</li>
+              <li>Drag the correct backed-up value to each defense.</li>
+              <li>Drag the Best Action marker to the defense MAX should select.</li>
+            </ol>
+            <div class="legend"><span>0–3 High risk</span><span>4–6 Moderate</span><span>7–9 Safer</span></div>
+          </aside>
+          <div class="card workspace">
+            <div class="token-bank" data-bank="q3">
+              <button class="drag-token orange" draggable="true" data-value="FIREWALL3">Firewall value = 3</button>
+              <button class="drag-token orange" draggable="true" data-value="ISOLATE4">Isolation value = 4</button>
+              <button class="drag-token orange" draggable="true" data-value="MONITOR2">Monitoring value = 2</button>
+              <button class="drag-token green" draggable="true" data-value="BESTISOLATE">★ Best Action: Isolate</button>
+            </div>
+            <div class="security-tree">
+              <div class="security-root">Defender <b>MAX</b></div>
+              <div class="defense-columns">
+                <article><h3>Strengthen Firewall</h3><div class="drop-slot compact" data-answer="FIREWALL3">MIN value?</div><p>Attacker outcomes</p><div class="utility-row"><span>7</span><span>3</span><span>6</span></div><div class="drop-slot best-slot" data-answer="NOTHING">Best marker?</div></article>
+                <article><h3>Isolate Server</h3><div class="drop-slot compact" data-answer="ISOLATE4">MIN value?</div><p>Attacker outcomes</p><div class="utility-row"><span>5</span><span>4</span><span>8</span></div><div class="drop-slot best-slot" data-answer="BESTISOLATE">Best marker?</div></article>
+                <article><h3>Monitor Activity</h3><div class="drop-slot compact" data-answer="MONITOR2">MIN value?</div><p>Attacker outcomes</p><div class="utility-row"><span>2</span><span>9</span><span>6</span></div><div class="drop-slot best-slot" data-answer="NOTHING">Best marker?</div></article>
+              </div>
+            </div>
+            <div class="actions"><button class="secondary reset" data-question="3">Reset</button><button id="checkQ3" class="primary">Check Final Answer</button></div>
+            <p id="feedback3" class="feedback" role="status">Evaluate every defense before selecting the best guaranteed action.</p>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <section id="success" class="card certificate" hidden>
+      <div class="stars">★ · ★ · ★</div>
+      <p class="certificate-kicker">Certificate of Completion</p>
+      <h2>Susan Zehra’s Minimax Strategy Challenge</h2>
+      <p>This certifies that</p>
+      <div id="certificateName" class="certificate-name"></div>
+      <p>successfully evaluated adversarial game trees using the <b>Minimax algorithm</b>.</p>
+      <div class="certificate-details">
+        <div><span>Completed</span><b id="certificateDate"></b></div>
+        <div><span>Best security action</span><b>Isolate Server · Utility 4</b></div>
+      </div>
+      <p class="success-note">✓ Completed all three interactive challenges</p>
+      <div class="actions no-print"><button id="printButton" class="primary">Print / Save as PDF</button><button id="playAgain" class="secondary">Play Again</button></div>
+    </section>
+  </main>
+
+  <footer>Designed as an interactive introduction to adversarial decision-making.</footer>
+  <script src="script.js"></script>
+</body>
+</html>
