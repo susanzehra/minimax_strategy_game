@@ -118,37 +118,50 @@
 
       <section id="question3" class="question" hidden>
         <div class="scenario card">
-          <div><span class="kicker green-text">Question 3 · Security decision</span><h2>Defend a hospital network</h2>
-          <p>A hospital detects a cyber threat. The defender chooses a response, and a rational attacker chooses the most damaging counteraction. Higher utility means a safer outcome for the hospital.</p></div>
-          <div class="formula">Best guaranteed<br>security outcome</div>
+          <div><span class="kicker green-text">Question 3 · Tic-Tac-Toe</span><h2>Choose X’s best move</h2>
+          <p>X is the MAX player and must move next. O is the MIN player and will respond intelligently. Use Minimax to determine what happens after each available move.</p></div>
+          <div class="formula">X = MAX<br>O = MIN</div>
         </div>
         <div class="activity-grid wide-lesson">
           <aside class="card lesson">
-            <h3>Your mission</h3>
+            <h3>Utility values</h3>
+            <div class="score-key"><span><b>+1</b>X wins</span><span><b>0</b>Draw</span><span><b>−1</b>O wins</span></div>
+            <h3>Your task</h3>
             <ol>
-              <li>For each defense, assume the attacker chooses its <b>lowest</b> utility.</li>
-              <li>Drag the correct backed-up value to each defense.</li>
-              <li>Drag the Best Action marker to the defense MAX should select.</li>
+              <li>Evaluate X moving to Square 7, 8, or 9.</li>
+              <li>Assume O always makes its best response.</li>
+              <li>Drag each Minimax result to the matching move.</li>
+              <li>Drag the X marker onto the best square.</li>
             </ol>
-            <div class="legend"><span>0–3 High risk</span><span>4–6 Moderate</span><span>7–9 Safer</span></div>
+            <div class="tip"><strong>Important:</strong> X cannot force a win here. MAX should choose the move that avoids losing.</div>
           </aside>
           <div class="card workspace">
             <div class="token-bank" data-bank="q3">
-              <button class="drag-token orange" draggable="true" data-value="FIREWALL3">Firewall value = 3</button>
-              <button class="drag-token orange" draggable="true" data-value="ISOLATE4">Isolation value = 4</button>
-              <button class="drag-token orange" draggable="true" data-value="MONITOR2">Monitoring value = 2</button>
-              <button class="drag-token green" draggable="true" data-value="BESTISOLATE">★ Best Action: Isolate</button>
+              <button class="drag-token orange" draggable="true" data-value="MOVE7DRAW">Move 7 → 0 (Draw)</button>
+              <button class="drag-token orange" draggable="true" data-value="MOVE8LOSS">Move 8 → −1 (O wins)</button>
+              <button class="drag-token orange" draggable="true" data-value="MOVE9LOSS">Move 9 → −1 (O wins)</button>
+              <button class="drag-token green x-marker" draggable="true" data-value="BEST7">X · Best Move</button>
             </div>
-            <div class="security-tree">
-              <div class="security-root">Defender <b>MAX</b></div>
-              <div class="defense-columns">
-                <article><h3>Strengthen Firewall</h3><div class="drop-slot compact" data-answer="FIREWALL3">MIN value?</div><p>Attacker outcomes</p><div class="utility-row"><span>7</span><span>3</span><span>6</span></div><div class="drop-slot best-slot" data-answer="NOTHING">Best marker?</div></article>
-                <article><h3>Isolate Server</h3><div class="drop-slot compact" data-answer="ISOLATE4">MIN value?</div><p>Attacker outcomes</p><div class="utility-row"><span>5</span><span>4</span><span>8</span></div><div class="drop-slot best-slot" data-answer="BESTISOLATE">Best marker?</div></article>
-                <article><h3>Monitor Activity</h3><div class="drop-slot compact" data-answer="MONITOR2">MIN value?</div><p>Attacker outcomes</p><div class="utility-row"><span>2</span><span>9</span><span>6</span></div><div class="drop-slot best-slot" data-answer="NOTHING">Best marker?</div></article>
+            <div class="tic-tac-toe-area">
+              <div>
+                <p class="board-heading">Current board · X moves next</p>
+                <div class="tic-board" aria-label="Tic-Tac-Toe board. X X O, O O X, and three empty squares numbered 7, 8, and 9.">
+                  <div class="tic-cell x">X</div><div class="tic-cell x">X</div><div class="tic-cell o">O</div>
+                  <div class="tic-cell o">O</div><div class="tic-cell o">O</div><div class="tic-cell x">X</div>
+                  <div class="tic-cell drop-slot move-cell" data-answer="BEST7" data-square="7"><small>7</small></div>
+                  <div class="tic-cell drop-slot move-cell" data-answer="NOTHING" data-square="8"><small>8</small></div>
+                  <div class="tic-cell drop-slot move-cell" data-answer="NOTHING" data-square="9"><small>9</small></div>
+                </div>
+              </div>
+              <div class="move-evaluations">
+                <h3>Backed-up Minimax results</h3>
+                <div><span>If X chooses Square 7</span><div class="drop-slot" data-answer="MOVE7DRAW">Result?</div></div>
+                <div><span>If X chooses Square 8</span><div class="drop-slot" data-answer="MOVE8LOSS">Result?</div></div>
+                <div><span>If X chooses Square 9</span><div class="drop-slot" data-answer="MOVE9LOSS">Result?</div></div>
               </div>
             </div>
             <div class="actions"><button class="secondary reset" data-question="3">Reset</button><button id="checkQ3" class="primary">Check Final Answer</button></div>
-            <p id="feedback3" class="feedback" role="status">Evaluate every defense before selecting the best guaranteed action.</p>
+            <p id="feedback3" class="feedback" role="status">Evaluate Squares 7, 8, and 9, and then place X on its best move.</p>
           </div>
         </div>
       </section>
@@ -163,7 +176,7 @@
       <p>successfully evaluated adversarial game trees using the <b>Minimax algorithm</b>.</p>
       <div class="certificate-details">
         <div><span>Completed</span><b id="certificateDate"></b></div>
-        <div><span>Best security action</span><b>Isolate Server · Utility 4</b></div>
+        <div><span>Best Tic-Tac-Toe move</span><b>Square 7 · Utility 0 (Draw)</b></div>
       </div>
       <p class="success-note">✓ Completed all three interactive challenges</p>
       <div class="actions no-print"><button id="printButton" class="primary">Print / Save as PDF</button><button id="playAgain" class="secondary">Play Again</button></div>

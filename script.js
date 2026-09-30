@@ -43,6 +43,18 @@ function clearSelection() {
   selectedToken = null;
 }
 
+function restoreSlotLabel(slot) {
+  if (slot.classList.contains("move-cell")) {
+    slot.innerHTML = `<small>${slot.dataset.square}</small>`;
+  } else if (slot.closest("#question1")) {
+    slot.textContent = "Drop label";
+  } else if (slot.classList.contains("best-slot")) {
+    slot.textContent = "Best marker?";
+  } else {
+    slot.textContent = "Value?";
+  }
+}
+
 function placeToken(token, slot) {
   if (!token || !slot) return;
   const previousSlot = token.parentElement?.classList.contains("drop-slot") ? token.parentElement : null;
@@ -53,7 +65,7 @@ function placeToken(token, slot) {
   slot.classList.add("filled");
   slot.classList.remove("wrong", "correct", "drag-over");
   if (previousSlot && previousSlot !== slot) {
-    previousSlot.textContent = previousSlot.dataset.answer === "NOTHING" ? "Best marker?" : "Value?";
+    restoreSlotLabel(previousSlot);
     previousSlot.classList.remove("filled", "wrong", "correct");
   }
   clearSelection();
@@ -93,9 +105,7 @@ function resetQuestion(number) {
     const token = slot.querySelector(".drag-token");
     if (token) bank.appendChild(token);
     slot.classList.remove("filled", "wrong", "correct", "drag-over");
-    if (number === 1) slot.textContent = "Drop label";
-    else if (slot.classList.contains("best-slot")) slot.textContent = "Best marker?";
-    else slot.textContent = "Value?";
+    restoreSlotLabel(slot);
   });
   clearSelection();
   document.querySelector(`#feedback${number}`).className = "feedback";
@@ -153,9 +163,9 @@ document.querySelector("#checkQ3").addEventListener("click", () => {
   const result = checkSlots(3);
   const decoySlots = [...document.querySelectorAll('#question3 .drop-slot[data-answer="NOTHING"]')];
   const markerMisplaced = decoySlots.some((slot) => slot.querySelector(".drag-token"));
-  if (!result.complete) return feedback(3, "Place all three MIN values and the Best Action marker.", "bad");
-  if (!result.correct || markerMisplaced) return feedback(3, "Assume the attacker chooses the lowest utility under each defense. Then MAX chooses the largest of those guaranteed values.", "bad");
-  feedback(3, "Excellent! The guaranteed values are 3, 4, and 2. MAX selects Isolate Server with utility 4.", "good");
+  if (!result.complete) return feedback(3, "Place all three Minimax results and the X Best Move marker.", "bad");
+  if (!result.correct || markerMisplaced) return feedback(3, "Look ahead to O’s best response. Moves 8 and 9 let O win by taking Square 7. Only Move 7 prevents that diagonal.", "bad");
+  feedback(3, "Excellent! Square 7 blocks O’s diagonal threat and guarantees a draw. Moves 8 or 9 allow O to win on its next turn.", "good");
   window.setTimeout(showCertificate, 950);
 });
 

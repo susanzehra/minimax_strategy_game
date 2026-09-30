@@ -6,7 +6,7 @@ A static, browser-based learning game that introduces the Minimax algorithm thro
 
 1. Identify MAX, MIN, and terminal levels.
 2. Back up values through a small game tree.
-3. Use Minimax to select a hospital-network security response.
+3. Use Minimax to select the best move in a Tic-Tac-Toe position.
 
 ## Privacy
 
