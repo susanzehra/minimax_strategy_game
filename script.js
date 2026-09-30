@@ -13,6 +13,11 @@ const progressBar = document.querySelector("#progressBar");
 let studentName = "";
 let selectedToken = null;
 let draggedToken = null;
+let powerRemaining = 7;
+let powerGameOver = false;
+let powerPlayerTurn = true;
+let powerMoves = [];
+let powerLosses = 0;
 
 function cleanName(value) {
   return value.replace(/\s+/g, " ").trim();
@@ -159,20 +164,119 @@ document.querySelector("#checkQ2").addEventListener("click", () => {
   window.setTimeout(() => showQuestion(3), 900);
 });
 
-document.querySelector("#checkQ3").addEventListener("click", () => {
-  const result = checkSlots(3);
-  const decoySlots = [...document.querySelectorAll('#question3 .drop-slot[data-answer="NOTHING"]')];
-  const markerMisplaced = decoySlots.some((slot) => slot.querySelector(".drag-token"));
-  if (!result.complete) return feedback(3, "Place all three Minimax results and the X Best Move marker.", "bad");
-  if (!result.correct || markerMisplaced) return feedback(3, "Look ahead to O’s best response. Moves 8 and 9 let O win by taking Square 7. Only Move 7 prevents that diagonal.", "bad");
-  feedback(3, "Excellent! Square 7 blocks O’s diagonal threat and guarantees a draw. Moves 8 or 9 allow O to win on its next turn.", "good");
-  window.setTimeout(showCertificate, 950);
+const powerCells = document.querySelector("#powerCells");
+const remainingCount = document.querySelector("#remainingCount");
+const turnLabel = document.querySelector("#turnLabel");
+const takeZone = document.querySelector("#takeZone");
+const moveHistory = document.querySelector("#moveHistory");
+const takeCards = [...document.querySelectorAll(".take-card")];
+
+function renderPowerGame() {
+  powerCells.innerHTML = "";
+  for (let number = 1; number <= powerRemaining; number += 1) {
+    const cell = document.createElement("span");
+    cell.className = "power-cell";
+    cell.textContent = "⚡";
+    cell.setAttribute("aria-label", `Power cell ${number}`);
+    powerCells.appendChild(cell);
+  }
+  remainingCount.textContent = String(powerRemaining);
+  powerCells.setAttribute("aria-label", `${powerRemaining} power cells remaining`);
+  turnLabel.textContent = powerGameOver ? "Game complete" : powerPlayerTurn ? "Your turn · MAX" : "Computer turn · MIN";
+  takeCards.forEach((card) => {
+    const amount = Number(card.dataset.take);
+    card.disabled = powerGameOver || !powerPlayerTurn || amount > powerRemaining;
+  });
+  moveHistory.innerHTML = powerMoves.length
+    ? powerMoves.map((move) => `<li><b>${move.player}</b> removed ${move.amount} ${move.amount === 1 ? "cell" : "cells"}; ${move.left} remaining.</li>`).join("")
+    : "<li>No moves yet.</li>";
+}
+
+function startPowerGame() {
+  powerRemaining = 7;
+  powerGameOver = false;
+  powerPlayerTurn = true;
+  powerMoves = [];
+  takeZone.classList.remove("drag-over", "locked");
+  feedback(3, "You move first. Can you find the strategy that guarantees a win?", "");
+  renderPowerGame();
+}
+
+function finishPowerGame(playerWon) {
+  powerGameOver = true;
+  renderPowerGame();
+  if (playerWon) {
+    feedback(3, "You won! Starting with 7, take 1 first. After that, make your move and the computer’s previous move total 3.", "good");
+    window.setTimeout(showCertificate, 1400);
+  } else {
+    powerLosses += 1;
+    const hint = powerLosses >= 2
+      ? " Hint: your first move should leave a multiple of 3 for the computer."
+      : " Restart and think about what your first move should leave behind.";
+    feedback(3, `The computer took the final cell. MIN wins.${hint}`, "bad");
+  }
+}
+
+function computerPowerMove() {
+  if (powerGameOver || powerPlayerTurn) return;
+  let amount = powerRemaining % 3;
+  if (amount === 0) amount = 1;
+  amount = Math.min(amount, 2, powerRemaining);
+  powerRemaining -= amount;
+  powerMoves.push({ player: "Computer (MIN)", amount, left: powerRemaining });
+  if (powerRemaining === 0) {
+    finishPowerGame(false);
+    return;
+  }
+  powerPlayerTurn = true;
+  feedback(3, `The computer removed ${amount}. Your turn—${powerRemaining} cells remain.`, "");
+  renderPowerGame();
+}
+
+function makePowerMove(amount) {
+  if (powerGameOver || !powerPlayerTurn) return;
+  if (![1, 2].includes(amount) || amount > powerRemaining) {
+    feedback(3, "That move is not available. Remove one or two remaining cells.", "bad");
+    return;
+  }
+  powerRemaining -= amount;
+  powerMoves.push({ player: "You (MAX)", amount, left: powerRemaining });
+  if (powerRemaining === 0) {
+    finishPowerGame(true);
+    return;
+  }
+  powerPlayerTurn = false;
+  feedback(3, "The computer is using Minimax to choose its response…", "");
+  renderPowerGame();
+  window.setTimeout(computerPowerMove, 650);
+}
+
+takeCards.forEach((card) => {
+  card.addEventListener("click", () => makePowerMove(Number(card.dataset.take)));
+  card.addEventListener("dragstart", (event) => {
+    event.dataTransfer.setData("text/plain", card.dataset.take);
+  });
 });
+
+takeZone.addEventListener("dragover", (event) => {
+  if (!powerGameOver && powerPlayerTurn) {
+    event.preventDefault();
+    takeZone.classList.add("drag-over");
+  }
+});
+takeZone.addEventListener("dragleave", () => takeZone.classList.remove("drag-over"));
+takeZone.addEventListener("drop", (event) => {
+  event.preventDefault();
+  takeZone.classList.remove("drag-over");
+  makePowerMove(Number(event.dataTransfer.getData("text/plain")));
+});
+document.querySelector("#restartPowerGame").addEventListener("click", startPowerGame);
 
 function showQuestion(number) {
   [1, 2, 3].forEach((item) => { document.querySelector(`#question${item}`).hidden = item !== number; });
   progressText.textContent = `Question ${number} of 3`;
   progressBar.style.width = `${number * 33.333}%`;
+  if (number === 3) startPowerGame();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
