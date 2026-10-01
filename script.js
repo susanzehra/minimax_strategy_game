@@ -277,111 +277,202 @@ function showQuestion(number) {
   progressText.textContent = `Question ${number} of 4`;
   progressBar.style.width = `${number * 25}%`;
   if (number === 3) startPowerGame();
-  if (number === 4) startMission();
+  if (number === 4) startReactorGame(1);
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-const missionStages = [1, 2, 3, 4].map((number) => document.querySelector(`#missionStage${number}`));
-const missionMeter = [...document.querySelectorAll(".mission-meter span")];
+const reactorBanksElement = document.querySelector("#reactorBanks");
+const reactorTurnLabel = document.querySelector("#reactorTurnLabel");
+const reactorLevelLabel = document.querySelector("#reactorLevelLabel");
+const reactorTotal = document.querySelector("#reactorTotal");
+const reactorHistoryElement = document.querySelector("#reactorHistory");
+const reactorActionZone = document.querySelector("#reactorActionZone");
+const reactorMoveCards = [...document.querySelectorAll(".reactor-move")];
+const reactorConfigurations = [[2, 3, 4], [2, 3, 4, 6]];
+const reactorNames = ["A", "B", "C", "D"];
+const reactorMemo = new Map();
+let reactorLevel = 1;
+let reactorBanks = [];
+let selectedReactor = null;
+let reactorPlayerTurn = true;
+let reactorGameOver = false;
+let reactorHistory = [];
+let draggedReactorMove = null;
 
-function populateMissionSelects() {
-  document.querySelectorAll("#question4 select[data-answer]").forEach((select) => {
-    const current = select.value;
-    select.innerHTML = '<option value="">Choose…</option>';
-    for (let value = 0; value <= 9; value += 1) {
-      const option = document.createElement("option");
-      option.value = String(value);
-      option.textContent = String(value);
-      select.appendChild(option);
-    }
-    select.value = current;
-  });
+function reactorKey(banks, maxTurn) {
+  return `${banks.join(",")}|${maxTurn ? "MAX" : "MIN"}`;
 }
 
-function showMissionStage(stageNumber) {
-  missionStages.forEach((stage, index) => { stage.hidden = index + 1 !== stageNumber; });
-  missionMeter.forEach((step, index) => {
-    step.classList.toggle("active", index + 1 === stageNumber);
-    step.classList.toggle("done", index + 1 < stageNumber);
-  });
-}
-
-function startMission() {
-  document.querySelectorAll("#question4 select").forEach((select) => {
-    select.value = "";
-    select.classList.remove("correct", "wrong");
-  });
-  document.querySelectorAll('input[name="bestDefense"]').forEach((radio) => { radio.checked = false; });
-  document.querySelector(".strategy-choice").classList.remove("correct", "wrong");
-  showMissionStage(1);
-  feedback(4, "Begin with Stage 1. Twelve attacker decisions must be evaluated correctly.", "");
-}
-
-function checkMissionSelects(stageNumber) {
-  const selects = [...document.querySelectorAll(`#missionStage${stageNumber} select[data-answer]`)];
-  let complete = true;
-  let correct = true;
-  selects.forEach((select) => {
-    select.classList.remove("correct", "wrong");
-    if (!select.value) {
-      complete = false;
-      correct = false;
-      select.classList.add("wrong");
-    } else if (select.value === select.dataset.answer) {
-      select.classList.add("correct");
-    } else {
-      correct = false;
-      select.classList.add("wrong");
-    }
-  });
-  return { complete, correct };
-}
-
-document.querySelector("#checkMission1").addEventListener("click", () => {
-  const result = checkMissionSelects(1);
-  if (!result.complete) return feedback(4, "Complete all twelve MIN decisions before checking.", "bad");
-  if (!result.correct) return feedback(4, "Some values are incorrect. At every node in this stage, MIN keeps the smaller terminal score.", "bad");
-  feedback(4, "Stage 1 cleared! You correctly resolved all twelve deepest MIN nodes.", "good");
-  window.setTimeout(() => { showMissionStage(2); feedback(4, "Stage 2: MAX now keeps the larger value in each recovery pair.", ""); }, 800);
-});
-
-document.querySelector("#checkMission2").addEventListener("click", () => {
-  const result = checkMissionSelects(2);
-  if (!result.complete) return feedback(4, "Complete all six MAX decisions before checking.", "bad");
-  if (!result.correct) return feedback(4, "Recheck the highlighted values. MAX keeps the larger value in each pair.", "bad");
-  feedback(4, "Stage 2 cleared! The six recovery choices are correct.", "good");
-  window.setTimeout(() => { showMissionStage(3); feedback(4, "Stage 3: MIN chooses the less favorable recovery result for each strategy.", ""); }, 800);
-});
-
-document.querySelector("#checkMission3").addEventListener("click", () => {
-  const result = checkMissionSelects(3);
-  if (!result.complete) return feedback(4, "Find the guaranteed value of all three defense strategies.", "bad");
-  if (!result.correct) return feedback(4, "The attacker is MIN, so each strategy receives the smaller of its two recovery values.", "bad");
-  feedback(4, "Stage 3 cleared! The guaranteed values are Firewall 4, Isolation 6, and Decoy 3.", "good");
-  window.setTimeout(() => { showMissionStage(4); feedback(4, "Final stage: choose the largest guaranteed value and its defense strategy.", ""); }, 800);
-});
-
-document.querySelector("#checkMission4").addEventListener("click", () => {
-  const root = document.querySelector("#missionRootValue");
-  const choice = document.querySelector('input[name="bestDefense"]:checked');
-  const choiceBox = document.querySelector(".strategy-choice");
-  root.classList.remove("correct", "wrong");
-  choiceBox.classList.remove("correct", "wrong");
-  if (!root.value || !choice) {
-    root.classList.add(root.value ? "correct" : "wrong");
-    choiceBox.classList.add(choice ? "correct" : "wrong");
-    return feedback(4, "Select both the root minimax value and the best initial defense.", "bad");
+function reactorMinimax(banks, maxTurn) {
+  const key = reactorKey(banks, maxTurn);
+  if (reactorMemo.has(key)) return reactorMemo.get(key);
+  if (banks.every((value) => value === 0)) {
+    const terminalScore = maxTurn ? -1 : 1;
+    reactorMemo.set(key, terminalScore);
+    return terminalScore;
   }
-  const correct = root.value === "6" && choice.value === "isolation";
-  root.classList.add(root.value === "6" ? "correct" : "wrong");
-  choiceBox.classList.add(choice.value === "isolation" ? "correct" : "wrong");
-  if (!correct) return feedback(4, "Not quite. MAX must select the largest guaranteed strategy value at the root.", "bad");
-  feedback(4, "Mission accomplished! System Isolation guarantees the best outcome, with a minimax value of 6.", "good");
-  window.setTimeout(showCertificate, 1400);
-});
+  let best = maxTurn ? -Infinity : Infinity;
+  for (let bank = 0; bank < banks.length; bank += 1) {
+    for (let amount = 1; amount <= Math.min(3, banks[bank]); amount += 1) {
+      const next = [...banks];
+      next[bank] -= amount;
+      const score = reactorMinimax(next, !maxTurn);
+      best = maxTurn ? Math.max(best, score) : Math.min(best, score);
+    }
+  }
+  reactorMemo.set(key, best);
+  return best;
+}
 
-document.querySelectorAll(".restart-mission").forEach((button) => button.addEventListener("click", startMission));
-populateMissionSelects();
+function bestComputerReactorMove() {
+  let bestScore = Infinity;
+  let bestMoves = [];
+  for (let bank = 0; bank < reactorBanks.length; bank += 1) {
+    for (let amount = 1; amount <= Math.min(3, reactorBanks[bank]); amount += 1) {
+      const next = [...reactorBanks];
+      next[bank] -= amount;
+      const score = reactorMinimax(next, true);
+      if (score < bestScore) {
+        bestScore = score;
+        bestMoves = [{ bank, amount }];
+      } else if (score === bestScore) {
+        bestMoves.push({ bank, amount });
+      }
+    }
+  }
+  bestMoves.sort((a, b) => b.amount - a.amount || a.bank - b.bank);
+  return bestMoves[0];
+}
+
+function renderReactorGame() {
+  reactorBanksElement.innerHTML = "";
+  reactorBanks.forEach((count, index) => {
+    const bank = document.createElement("button");
+    bank.type = "button";
+    bank.className = `reactor-bank${selectedReactor === index ? " selected" : ""}${count === 0 ? " empty" : ""}`;
+    bank.disabled = reactorGameOver || !reactorPlayerTurn || count === 0;
+    bank.dataset.bank = String(index);
+    bank.innerHTML = `<h4>Reactor ${reactorNames[index]}</h4><span class="reactor-bank-count">${count} ${count === 1 ? "cell" : "cells"}</span><div class="reactor-cell-stack">${Array.from({ length: count }, () => '<span class="reactor-mini-cell">⚡</span>').join("")}</div>`;
+    bank.addEventListener("click", () => {
+      selectedReactor = index;
+      reactorActionZone.classList.add("ready");
+      feedback(4, `Reactor ${reactorNames[index]} selected. Choose how many cells to remove.`, "");
+      renderReactorGame();
+    });
+    reactorBanksElement.appendChild(bank);
+  });
+  const total = reactorBanks.reduce((sum, value) => sum + value, 0);
+  reactorTotal.textContent = String(total);
+  reactorLevelLabel.textContent = `Level ${reactorLevel} of 2`;
+  reactorTurnLabel.textContent = reactorGameOver ? "Level complete" : reactorPlayerTurn ? "Your turn · MAX" : "Computer turn · MIN";
+  reactorMoveCards.forEach((card) => {
+    const amount = Number(card.dataset.remove);
+    const available = selectedReactor !== null ? reactorBanks[selectedReactor] : 0;
+    card.disabled = reactorGameOver || !reactorPlayerTurn || selectedReactor === null || amount > available;
+  });
+  reactorHistoryElement.innerHTML = reactorHistory.length
+    ? reactorHistory.map((move) => `<li><b>${move.player}</b> removed ${move.amount} from Reactor ${reactorNames[move.bank]}; ${move.left} total remaining.</li>`).join("")
+    : "<li>No moves yet.</li>";
+}
+
+function startReactorGame(level = reactorLevel) {
+  reactorLevel = level;
+  reactorBanks = [...reactorConfigurations[level - 1]];
+  selectedReactor = null;
+  reactorPlayerTurn = true;
+  reactorGameOver = false;
+  reactorHistory = [];
+  reactorActionZone.classList.remove("ready", "drag-over");
+  document.querySelector("#reactorLevelOne").className = level === 1 ? "active" : "done";
+  document.querySelector("#reactorLevelTwo").className = level === 2 ? "active" : "";
+  feedback(4, level === 1
+    ? "Level 1: three reactors are active. Select a reactor and plan several turns ahead."
+    : "Level 2: four reactors and fifteen cells. Win this level to complete the challenge.", "");
+  renderReactorGame();
+}
+
+function finishReactorGame(playerWon) {
+  reactorGameOver = true;
+  renderReactorGame();
+  if (!playerWon) {
+    feedback(4, `MIN removed the final cell and won Level ${reactorLevel}. Restart this level and try a different opening strategy.`, "bad");
+    return;
+  }
+  if (reactorLevel === 1) {
+    feedback(4, "Level 1 cleared! Preparing the larger four-reactor challenge…", "good");
+    document.querySelector("#reactorLevelOne").className = "done";
+    window.setTimeout(() => startReactorGame(2), 1300);
+    return;
+  }
+  document.querySelector("#reactorLevelTwo").className = "done";
+  feedback(4, "Reactor mission accomplished! You defeated the Minimax opponent on both levels.", "good");
+  window.setTimeout(showCertificate, 1500);
+}
+
+function computerReactorMove() {
+  if (reactorGameOver || reactorPlayerTurn) return;
+  const move = bestComputerReactorMove();
+  reactorBanks[move.bank] -= move.amount;
+  const left = reactorBanks.reduce((sum, value) => sum + value, 0);
+  reactorHistory.push({ player: "Computer (MIN)", bank: move.bank, amount: move.amount, left });
+  if (left === 0) {
+    finishReactorGame(false);
+    return;
+  }
+  selectedReactor = null;
+  reactorPlayerTurn = true;
+  reactorActionZone.classList.remove("ready");
+  feedback(4, `MIN removed ${move.amount} from Reactor ${reactorNames[move.bank]}. Your turn—choose a reactor.`, "");
+  renderReactorGame();
+}
+
+function makeReactorMove(amount) {
+  if (reactorGameOver || !reactorPlayerTurn) return;
+  if (selectedReactor === null) {
+    feedback(4, "Select a reactor before choosing how many cells to remove.", "bad");
+    return;
+  }
+  if (![1, 2, 3].includes(amount) || amount > reactorBanks[selectedReactor]) {
+    feedback(4, "That move is not available for the selected reactor.", "bad");
+    return;
+  }
+  const bank = selectedReactor;
+  reactorBanks[bank] -= amount;
+  const left = reactorBanks.reduce((sum, value) => sum + value, 0);
+  reactorHistory.push({ player: "You (MAX)", bank, amount, left });
+  if (left === 0) {
+    finishReactorGame(true);
+    return;
+  }
+  selectedReactor = null;
+  reactorPlayerTurn = false;
+  reactorActionZone.classList.remove("ready");
+  feedback(4, "MIN is searching future reactor states…", "");
+  renderReactorGame();
+  window.setTimeout(computerReactorMove, 700);
+}
+
+reactorMoveCards.forEach((card) => {
+  card.addEventListener("click", () => makeReactorMove(Number(card.dataset.remove)));
+  card.addEventListener("dragstart", (event) => {
+    draggedReactorMove = Number(card.dataset.remove);
+    event.dataTransfer.setData("text/plain", card.dataset.remove);
+  });
+  card.addEventListener("dragend", () => { draggedReactorMove = null; });
+});
+reactorActionZone.addEventListener("dragover", (event) => {
+  if (!reactorGameOver && reactorPlayerTurn && selectedReactor !== null) {
+    event.preventDefault();
+    reactorActionZone.classList.add("drag-over");
+  }
+});
+reactorActionZone.addEventListener("dragleave", () => reactorActionZone.classList.remove("drag-over"));
+reactorActionZone.addEventListener("drop", (event) => {
+  event.preventDefault();
+  reactorActionZone.classList.remove("drag-over");
+  makeReactorMove(draggedReactorMove ?? Number(event.dataTransfer.getData("text/plain")));
+});
+document.querySelector("#restartReactorLevel").addEventListener("click", () => startReactorGame(reactorLevel));
 
 function showCertificate() {
   game.hidden = true;
@@ -397,7 +488,7 @@ document.querySelector("#printButton").addEventListener("click", () => window.pr
 document.querySelector("#playAgain").addEventListener("click", () => {
   [1, 2].forEach(resetQuestion);
   startPowerGame();
-  startMission();
+  startReactorGame(1);
   success.hidden = true;
   welcome.hidden = false;
   studentNameInput.value = "";

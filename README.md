@@ -7,7 +7,7 @@ A static, browser-based learning game that introduces the Minimax algorithm thro
 1. Identify MAX, MIN, and terminal levels.
 2. Back up values through a small game tree.
 3. Play a seven-power-cell takeaway game against a computer using Minimax.
-4. Complete a four-stage Space Station Defense mission by evaluating 24 terminal scores and backing values through alternating MIN and MAX levels.
+4. Play the two-level Reactor Core Duel against a computer that searches future moves with Minimax. Players choose a reactor and remove one, two, or three cells per turn.
 
 ## Privacy
 
