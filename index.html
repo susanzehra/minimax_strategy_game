@@ -39,7 +39,7 @@
 
     <section id="game" hidden>
       <div class="progress-card">
-        <div><span id="progressText">Question 1 of 3</span><strong id="playerGreeting"></strong></div>
+        <div><span id="progressText">Question 1 of 4</span><strong id="playerGreeting"></strong></div>
         <div class="progress-track"><div id="progressBar"></div></div>
       </div>
 
@@ -151,6 +151,98 @@
           </div>
         </div>
       </section>
+
+      <section id="question4" class="question" hidden>
+        <div class="scenario card space-scenario">
+          <div><span class="kicker gold-text">Question 4 · Advanced Minimax Mission</span><h2>Space Station Defense</h2>
+          <p>You are the station commander (MAX). A cyberattacker (MIN) will always choose the response that hurts the station most. Work upward through the complete tree to find the defense with the best guaranteed outcome.</p></div>
+          <div class="formula">4 decision levels<br>24 terminal scores</div>
+        </div>
+
+        <div class="activity-grid wide-lesson">
+          <aside class="card lesson mission-brief">
+            <h3>Mission briefing</h3>
+            <ol>
+              <li>Solve the tree <b>from the bottom upward</b>.</li>
+              <li>At every <b>MIN</b> node, keep the smaller value.</li>
+              <li>At every <b>MAX</b> node, keep the larger value.</li>
+              <li>Complete each stage to unlock the next stage.</li>
+            </ol>
+            <div class="tip"><strong>Utility scale:</strong> larger positive scores mean the station survives with more systems operating. Negative scores would favor the attacker.</div>
+            <div class="mission-meter" aria-label="Mission progress">
+              <span class="active">1</span><span>2</span><span>3</span><span>4</span>
+            </div>
+          </aside>
+
+          <div class="card workspace space-workspace">
+            <div id="missionStage1" class="mission-stage">
+              <span class="mission-stage-label">Stage 1 of 4 · Resolve the deepest MIN nodes</span>
+              <h3>For each pair, select the smaller terminal score.</h3>
+              <p class="stage-help">Each row is a final attacker response. MIN chooses the worse outcome for MAX.</p>
+              <div class="strategy-grid leaf-stage">
+                <article class="strategy-card shield"><h4>🛡️ Firewall Shield</h4>
+                  <div class="leaf-pair"><span>8</span><span>3</span><select data-answer="3" aria-label="Firewall pair 8 and 3"></select></div>
+                  <div class="leaf-pair"><span>6</span><span>5</span><select data-answer="5" aria-label="Firewall pair 6 and 5"></select></div>
+                  <div class="leaf-pair"><span>4</span><span>7</span><select data-answer="4" aria-label="Firewall pair 4 and 7"></select></div>
+                  <div class="leaf-pair"><span>9</span><span>2</span><select data-answer="2" aria-label="Firewall pair 9 and 2"></select></div>
+                </article>
+                <article class="strategy-card isolation"><h4>🔒 System Isolation</h4>
+                  <div class="leaf-pair"><span>7</span><span>6</span><select data-answer="6" aria-label="Isolation pair 7 and 6"></select></div>
+                  <div class="leaf-pair"><span>3</span><span>8</span><select data-answer="3" aria-label="Isolation pair 3 and 8"></select></div>
+                  <div class="leaf-pair"><span>8</span><span>5</span><select data-answer="5" aria-label="Isolation pair 8 and 5"></select></div>
+                  <div class="leaf-pair"><span>7</span><span>6</span><select data-answer="6" aria-label="Isolation pair 7 and 6"></select></div>
+                </article>
+                <article class="strategy-card decoy"><h4>🛰️ Decoy Network</h4>
+                  <div class="leaf-pair"><span>5</span><span>2</span><select data-answer="2" aria-label="Decoy pair 5 and 2"></select></div>
+                  <div class="leaf-pair"><span>4</span><span>3</span><select data-answer="3" aria-label="Decoy pair 4 and 3"></select></div>
+                  <div class="leaf-pair"><span>7</span><span>4</span><select data-answer="4" aria-label="Decoy pair 7 and 4"></select></div>
+                  <div class="leaf-pair"><span>6</span><span>1</span><select data-answer="1" aria-label="Decoy pair 6 and 1"></select></div>
+                </article>
+              </div>
+              <div class="actions"><button class="secondary restart-mission" type="button">Reset Mission</button><button id="checkMission1" class="primary" type="button">Check Stage 1</button></div>
+            </div>
+
+            <div id="missionStage2" class="mission-stage" hidden>
+              <span class="mission-stage-label">Stage 2 of 4 · Resolve the MAX recovery nodes</span>
+              <h3>MAX now chooses the larger backed-up value in each pair.</h3>
+              <div class="strategy-grid compact-stage">
+                <article class="strategy-card shield"><h4>🛡️ Firewall Shield</h4><div class="decision-row"><span>max(3, 5)</span><select data-answer="5"></select></div><div class="decision-row"><span>max(4, 2)</span><select data-answer="4"></select></div></article>
+                <article class="strategy-card isolation"><h4>🔒 System Isolation</h4><div class="decision-row"><span>max(6, 3)</span><select data-answer="6"></select></div><div class="decision-row"><span>max(5, 6)</span><select data-answer="6"></select></div></article>
+                <article class="strategy-card decoy"><h4>🛰️ Decoy Network</h4><div class="decision-row"><span>max(2, 3)</span><select data-answer="3"></select></div><div class="decision-row"><span>max(4, 1)</span><select data-answer="4"></select></div></article>
+              </div>
+              <div class="actions"><button class="secondary restart-mission" type="button">Reset Mission</button><button id="checkMission2" class="primary" type="button">Check Stage 2</button></div>
+            </div>
+
+            <div id="missionStage3" class="mission-stage" hidden>
+              <span class="mission-stage-label">Stage 3 of 4 · Resolve each defense strategy</span>
+              <h3>The attacker chooses the smaller recovery value.</h3>
+              <div class="strategy-grid compact-stage">
+                <article class="strategy-card shield"><h4>🛡️ Firewall Shield</h4><div class="decision-row"><span>min(5, 4)</span><select data-answer="4"></select></div></article>
+                <article class="strategy-card isolation"><h4>🔒 System Isolation</h4><div class="decision-row"><span>min(6, 6)</span><select data-answer="6"></select></div></article>
+                <article class="strategy-card decoy"><h4>🛰️ Decoy Network</h4><div class="decision-row"><span>min(3, 4)</span><select data-answer="3"></select></div></article>
+              </div>
+              <div class="actions"><button class="secondary restart-mission" type="button">Reset Mission</button><button id="checkMission3" class="primary" type="button">Check Stage 3</button></div>
+            </div>
+
+            <div id="missionStage4" class="mission-stage final-mission" hidden>
+              <span class="mission-stage-label">Stage 4 of 4 · Make the command decision</span>
+              <h3>MAX chooses the defense with the largest guaranteed value.</h3>
+              <div class="root-decision">
+                <div><span>Firewall Shield</span><b>4</b></div><div><span>System Isolation</span><b>6</b></div><div><span>Decoy Network</span><b>3</b></div>
+              </div>
+              <label for="missionRootValue">Root minimax value</label>
+              <select id="missionRootValue" data-answer="6"></select>
+              <fieldset class="strategy-choice"><legend>Best initial defense</legend>
+                <label><input type="radio" name="bestDefense" value="shield"> Firewall Shield</label>
+                <label><input type="radio" name="bestDefense" value="isolation"> System Isolation</label>
+                <label><input type="radio" name="bestDefense" value="decoy"> Decoy Network</label>
+              </fieldset>
+              <div class="actions"><button class="secondary restart-mission" type="button">Reset Mission</button><button id="checkMission4" class="primary" type="button">Complete Mission</button></div>
+            </div>
+            <p id="feedback4" class="feedback" role="status">Begin with Stage 1. Twelve attacker decisions must be evaluated correctly.</p>
+          </div>
+        </div>
+      </section>
     </section>
 
     <section id="success" class="card certificate" hidden>
@@ -162,14 +254,14 @@
       <p>successfully evaluated adversarial game trees using the <b>Minimax algorithm</b>.</p>
       <div class="certificate-details">
         <div><span>Completed</span><b id="certificateDate"></b></div>
-        <div><span>Winning strategy</span><b>Control the game in groups of three</b></div>
+        <div><span>Advanced mission</span><b>System Isolation · Minimax value 6</b></div>
       </div>
-      <p class="success-note">✓ Completed all three interactive challenges</p>
+      <p class="success-note">✓ Completed all four interactive challenges</p>
       <div class="actions no-print"><button id="printButton" class="primary">Print / Save as PDF</button><button id="playAgain" class="secondary">Play Again</button></div>
     </section>
   </main>
 
-  <footer>Designed as an interactive introduction to adversarial decision-making.</footer>
+  <footer>Designed as an interactive introduction to adversarial decision-making.<br>Copyright © 2026 Susan Zehra. All rights reserved.</footer>
   <script src="script.js"></script>
 </body>
 </html>

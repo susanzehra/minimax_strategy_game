@@ -207,7 +207,7 @@ function finishPowerGame(playerWon) {
   renderPowerGame();
   if (playerWon) {
     feedback(3, "You won! Starting with 7, take 1 first. After that, make your move and the computer’s previous move total 3.", "good");
-    window.setTimeout(showCertificate, 1400);
+    window.setTimeout(() => showQuestion(4), 1400);
   } else {
     powerLosses += 1;
     const hint = powerLosses >= 2
@@ -273,12 +273,115 @@ takeZone.addEventListener("drop", (event) => {
 document.querySelector("#restartPowerGame").addEventListener("click", startPowerGame);
 
 function showQuestion(number) {
-  [1, 2, 3].forEach((item) => { document.querySelector(`#question${item}`).hidden = item !== number; });
-  progressText.textContent = `Question ${number} of 3`;
-  progressBar.style.width = `${number * 33.333}%`;
+  [1, 2, 3, 4].forEach((item) => { document.querySelector(`#question${item}`).hidden = item !== number; });
+  progressText.textContent = `Question ${number} of 4`;
+  progressBar.style.width = `${number * 25}%`;
   if (number === 3) startPowerGame();
+  if (number === 4) startMission();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
+
+const missionStages = [1, 2, 3, 4].map((number) => document.querySelector(`#missionStage${number}`));
+const missionMeter = [...document.querySelectorAll(".mission-meter span")];
+
+function populateMissionSelects() {
+  document.querySelectorAll("#question4 select[data-answer]").forEach((select) => {
+    const current = select.value;
+    select.innerHTML = '<option value="">Choose…</option>';
+    for (let value = 0; value <= 9; value += 1) {
+      const option = document.createElement("option");
+      option.value = String(value);
+      option.textContent = String(value);
+      select.appendChild(option);
+    }
+    select.value = current;
+  });
+}
+
+function showMissionStage(stageNumber) {
+  missionStages.forEach((stage, index) => { stage.hidden = index + 1 !== stageNumber; });
+  missionMeter.forEach((step, index) => {
+    step.classList.toggle("active", index + 1 === stageNumber);
+    step.classList.toggle("done", index + 1 < stageNumber);
+  });
+}
+
+function startMission() {
+  document.querySelectorAll("#question4 select").forEach((select) => {
+    select.value = "";
+    select.classList.remove("correct", "wrong");
+  });
+  document.querySelectorAll('input[name="bestDefense"]').forEach((radio) => { radio.checked = false; });
+  document.querySelector(".strategy-choice").classList.remove("correct", "wrong");
+  showMissionStage(1);
+  feedback(4, "Begin with Stage 1. Twelve attacker decisions must be evaluated correctly.", "");
+}
+
+function checkMissionSelects(stageNumber) {
+  const selects = [...document.querySelectorAll(`#missionStage${stageNumber} select[data-answer]`)];
+  let complete = true;
+  let correct = true;
+  selects.forEach((select) => {
+    select.classList.remove("correct", "wrong");
+    if (!select.value) {
+      complete = false;
+      correct = false;
+      select.classList.add("wrong");
+    } else if (select.value === select.dataset.answer) {
+      select.classList.add("correct");
+    } else {
+      correct = false;
+      select.classList.add("wrong");
+    }
+  });
+  return { complete, correct };
+}
+
+document.querySelector("#checkMission1").addEventListener("click", () => {
+  const result = checkMissionSelects(1);
+  if (!result.complete) return feedback(4, "Complete all twelve MIN decisions before checking.", "bad");
+  if (!result.correct) return feedback(4, "Some values are incorrect. At every node in this stage, MIN keeps the smaller terminal score.", "bad");
+  feedback(4, "Stage 1 cleared! You correctly resolved all twelve deepest MIN nodes.", "good");
+  window.setTimeout(() => { showMissionStage(2); feedback(4, "Stage 2: MAX now keeps the larger value in each recovery pair.", ""); }, 800);
+});
+
+document.querySelector("#checkMission2").addEventListener("click", () => {
+  const result = checkMissionSelects(2);
+  if (!result.complete) return feedback(4, "Complete all six MAX decisions before checking.", "bad");
+  if (!result.correct) return feedback(4, "Recheck the highlighted values. MAX keeps the larger value in each pair.", "bad");
+  feedback(4, "Stage 2 cleared! The six recovery choices are correct.", "good");
+  window.setTimeout(() => { showMissionStage(3); feedback(4, "Stage 3: MIN chooses the less favorable recovery result for each strategy.", ""); }, 800);
+});
+
+document.querySelector("#checkMission3").addEventListener("click", () => {
+  const result = checkMissionSelects(3);
+  if (!result.complete) return feedback(4, "Find the guaranteed value of all three defense strategies.", "bad");
+  if (!result.correct) return feedback(4, "The attacker is MIN, so each strategy receives the smaller of its two recovery values.", "bad");
+  feedback(4, "Stage 3 cleared! The guaranteed values are Firewall 4, Isolation 6, and Decoy 3.", "good");
+  window.setTimeout(() => { showMissionStage(4); feedback(4, "Final stage: choose the largest guaranteed value and its defense strategy.", ""); }, 800);
+});
+
+document.querySelector("#checkMission4").addEventListener("click", () => {
+  const root = document.querySelector("#missionRootValue");
+  const choice = document.querySelector('input[name="bestDefense"]:checked');
+  const choiceBox = document.querySelector(".strategy-choice");
+  root.classList.remove("correct", "wrong");
+  choiceBox.classList.remove("correct", "wrong");
+  if (!root.value || !choice) {
+    root.classList.add(root.value ? "correct" : "wrong");
+    choiceBox.classList.add(choice ? "correct" : "wrong");
+    return feedback(4, "Select both the root minimax value and the best initial defense.", "bad");
+  }
+  const correct = root.value === "6" && choice.value === "isolation";
+  root.classList.add(root.value === "6" ? "correct" : "wrong");
+  choiceBox.classList.add(choice.value === "isolation" ? "correct" : "wrong");
+  if (!correct) return feedback(4, "Not quite. MAX must select the largest guaranteed strategy value at the root.", "bad");
+  feedback(4, "Mission accomplished! System Isolation guarantees the best outcome, with a minimax value of 6.", "good");
+  window.setTimeout(showCertificate, 1400);
+});
+
+document.querySelectorAll(".restart-mission").forEach((button) => button.addEventListener("click", startMission));
+populateMissionSelects();
 
 function showCertificate() {
   game.hidden = true;
@@ -292,7 +395,9 @@ function showCertificate() {
 
 document.querySelector("#printButton").addEventListener("click", () => window.print());
 document.querySelector("#playAgain").addEventListener("click", () => {
-  [1, 2, 3].forEach(resetQuestion);
+  [1, 2].forEach(resetQuestion);
+  startPowerGame();
+  startMission();
   success.hidden = true;
   welcome.hidden = false;
   studentNameInput.value = "";
